@@ -1,0 +1,11 @@
+docker run -p 6379:6379 --name test-redis-cache -d redis
+
+curl --header "Content-Type: application/json" \
+  --request GET \
+  http://localhost:8080/programmers?mainLanguage=ruby
+
+
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"nick": "mark", "mainLanguage":"ruby"}' \
+  http://localhost:8080/programmers
