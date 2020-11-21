@@ -25,10 +25,10 @@ import org.testcontainers.containers.GenericContainer;
     classes = TestRedisCacheApplication.class)
 public class ProgrammerServiceTest {
 
-  private static final String PROGRAMMER_NICK = "thenick";
-  private static final String PROGRAMMER_MAIN_LANGUAGE = "themainlanguage";
+  private static final String PROGRAMMER_RAMESH = "ramesh";
+  private static final String PROGRAMMER_MAIN_LANGUAGE = "mainlanguage";
 
-  private static final String NEW_PROGRAMMER_NICK = "thenewprogrammernick";
+  private static final String NEW_PROGRAMMER_RAMESH = "thenewprogrammerramesh";
   private static final String NEW_PROGRAMMER_MAIN_LANGUAGE = "thenewprogrammermainlanguage";
 
   private static final String PROGRAMMERS_CACHE_NAME = "programmers";
@@ -42,22 +42,27 @@ public class ProgrammerServiceTest {
   @Autowired
   private CacheManager cacheManager;
 
+
   @Test
-  public void shouldCacheProgrammersByMainLanguage() {
+  public void shouldFetchValuesFromRedisCache() {
     //Given
     List<Programmer> programmers = Arrays.asList(
-        Programmer.builder().nick(PROGRAMMER_NICK).mainLanguage(PROGRAMMER_MAIN_LANGUAGE).build());
+            Programmer.builder().name(PROGRAMMER_RAMESH).mainLanguage(PROGRAMMER_MAIN_LANGUAGE).build());
     programmers.forEach(programmerRepository::save);
 
     // When
-    List<Programmer> found = programmerService
-        .findProgrammersByMainLanguage(PROGRAMMER_MAIN_LANGUAGE);
+    //values will be fetched from DB first time
+    List<Programmer> programmersByMainLanguag = programmerService
+            .findProgrammersByMainLanguage(PROGRAMMER_MAIN_LANGUAGE);
+    //verify(programmerRepository, times(1)).findByMainLanguage()
+    //values will be fetched from cache
+    List<Programmer> cacheValues = programmerService
+            .findProgrammersByMainLanguage(PROGRAMMER_MAIN_LANGUAGE);
 
-    //Then
-    assertThat(found).isNotNull();
-    assertThat(found).hasSize(programmers.size());
-    assertThat(found.get(0)).extracting("nick", "mainLanguage")
-        .contains(PROGRAMMER_NICK, PROGRAMMER_MAIN_LANGUAGE);
+    assertThat(cacheValues).isNotNull();
+    assertThat(cacheValues).hasSize(programmers.size());
+    assertThat(cacheValues.get(0)).extracting("name", "mainLanguage")
+            .contains(PROGRAMMER_RAMESH, PROGRAMMER_MAIN_LANGUAGE);
 
     Cache programmersCache = cacheManager.getCache(PROGRAMMERS_CACHE_NAME);
     assertThat(programmersCache).isNotNull();
@@ -66,18 +71,19 @@ public class ProgrammerServiceTest {
     assertThat(cacheValue.get()).isEqualTo(programmers);
   }
 
+
   @Test
   public void shouldEvictProgrammersCache() {
     //Given
     List<Programmer> programmers = Arrays.asList(
-        Programmer.builder().nick(PROGRAMMER_NICK).mainLanguage(NEW_PROGRAMMER_MAIN_LANGUAGE)
+        Programmer.builder().name(PROGRAMMER_RAMESH).mainLanguage(NEW_PROGRAMMER_MAIN_LANGUAGE)
             .build());
     Cache programmersCache = cacheManager.getCache(PROGRAMMERS_CACHE_NAME);
     programmersCache.put(NEW_PROGRAMMER_MAIN_LANGUAGE, programmers);
     assertThat(programmersCache.get(NEW_PROGRAMMER_MAIN_LANGUAGE)).isNotNull();
     assertThat(programmersCache.get(NEW_PROGRAMMER_MAIN_LANGUAGE).get()).isEqualTo(programmers);
 
-    Programmer toCreate = Programmer.builder().nick(NEW_PROGRAMMER_NICK)
+    Programmer toCreate = Programmer.builder().name(NEW_PROGRAMMER_RAMESH)
         .mainLanguage(NEW_PROGRAMMER_MAIN_LANGUAGE).build();
 
     //When
@@ -85,8 +91,8 @@ public class ProgrammerServiceTest {
 
     //Then
     assertThat(saved).isNotNull();
-    assertThat(saved).extracting("nick", "mainLanguage")
-        .contains(NEW_PROGRAMMER_NICK, NEW_PROGRAMMER_MAIN_LANGUAGE);
+    assertThat(saved).extracting("name", "mainLanguage")
+        .contains(NEW_PROGRAMMER_RAMESH, NEW_PROGRAMMER_MAIN_LANGUAGE);
 
     programmersCache = cacheManager.getCache(PROGRAMMERS_CACHE_NAME);
     assertThat(programmersCache).isNotNull();

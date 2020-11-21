@@ -27,7 +27,7 @@ public class TestRedisCacheApplication {
     @Override
     public void run(final String... args) {
       IntStream.range(1, 4)
-          .mapToObj(idx -> Programmer.builder().nick("nick-" + idx).mainLanguage("ruby").build())
+          .mapToObj(idx -> Programmer.builder().name("nick-" + idx).mainLanguage("ruby").build())
           .forEach(programmerRepository::save);
     }
 

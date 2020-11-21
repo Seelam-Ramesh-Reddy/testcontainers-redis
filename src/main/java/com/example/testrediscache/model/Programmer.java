@@ -18,6 +18,6 @@ import lombok.NoArgsConstructor;
 public class Programmer implements Serializable {
 
   @Id
-  private String nick;
+  private String name;
   private String mainLanguage;
 }
